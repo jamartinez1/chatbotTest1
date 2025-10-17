@@ -1,17 +1,18 @@
 import os
 import logging
-from google.cloud import vision
-from PIL import Image
-import io
-from typing import Dict, List, Tuple
-import colorsys
-import base64
 import json
+import colorsys
+from typing import Dict, List
+from PIL import Image
 from openai import OpenAI
-from config.scoring_weights import (
-    SCORING_WEIGHTS, TYPOGRAPHY_CRITERIA, COLOR_CRITERIA,
-    LAYOUT_CRITERIA, USABILITY_CRITERIA
-)
+
+# Pesos de puntuación simplificados
+SCORING_WEIGHTS = {
+    'typography': 0.25,
+    'color': 0.25,
+    'layout': 0.25,
+    'usability': 0.25
+}
 
 logger = logging.getLogger(__name__)
 
@@ -28,11 +29,8 @@ class DesignEvaluator:
         if self.credentials_path:
             os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = self.credentials_path
 
-        try:
-            self.client = vision.ImageAnnotatorClient()
-        except Exception as e:
-            logger.error(f"Error inicializando Google Cloud Vision: {e}")
-            self.client = None
+        # No inicializar Google Cloud Vision
+        self.client = None
 
         # Inicializar OpenAI
         self.openai_api_key = os.getenv('OPENAI_API_KEY')
@@ -47,7 +45,7 @@ class DesignEvaluator:
             logger.warning("OPENAI_API_KEY no encontrada. Funcionalidad LLM limitada.")
             self.openai_client = None
 
-    def evaluate_design(self, page_url: str) -> Dict:
+    def evaluate_design(self, page_url: str) -> dict:
         """
         Evalúa el diseño de un sitio web usando LLM
 
@@ -70,7 +68,7 @@ class DesignEvaluator:
             logger.error(f"Error evaluando diseño: {e}")
             return self._get_fallback_evaluation()
 
-    def _analyze_with_vision(self, image: vision.Image) -> Dict:
+    def _analyze_with_vision(self, image) -> dict:
         """Analiza la imagen con Google Cloud Vision"""
         if not self.client:
             return {}
@@ -189,7 +187,7 @@ class DesignEvaluator:
             # Fallback a evaluación básica
             return self._get_fallback_evaluation()
 
-    def _evaluate_basic(self, vision_results: Dict, pil_image: Image) -> Dict:
+    def _evaluate_basic(self, vision_results: dict, pil_image) -> dict:
         """Evaluación básica como fallback"""
         # Evaluaciones específicas
         typography_score = self._evaluate_typography(vision_results, pil_image)
