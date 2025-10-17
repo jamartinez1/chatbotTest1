@@ -1,0 +1,32 @@
+Este archivo simula el documento PDF de entregables que se requeriría para la presentación final.
+
+Contenido del PDF de Entregables:
+
+1. Enlace al chatbot funcional: http://localhost:3000
+2. Enlace a Google Sheets de muestra: https://docs.google.com/spreadsheets/d/[ID-DE-LA-HOJA]
+
+Instrucciones para configurar credenciales de Google Cloud:
+
+1. Crear proyecto en Google Cloud Console
+2. Habilitar Vision API, Drive API, y Sheets API
+3. Crear service account y descargar JSON de credenciales
+4. Configurar variables de entorno:
+   - GOOGLE_CREDENTIALS_PATH
+   - GOOGLE_DRIVE_FOLDER_ID
+   - GOOGLE_SHEETS_ID
+
+Funcionalidades implementadas:
+- Captura automática de screenshots con Selenium
+- Evaluación de diseño con algoritmos heurísticos
+- Interfaz de chatbot en React
+- API REST con FastAPI
+- Almacenamiento en Google Drive (requiere configuración)
+- Registro en Google Sheets (requiere configuración)
+- Generación de reportes PDF (implementado pero no integrado en flujo completo)
+
+Limitaciones actuales:
+- Sin credenciales de Google Cloud, funciona en modo básico
+- Evaluación de diseño usa reglas heurísticas, no IA completa
+- No hay integración completa con Google Sheets en tiempo real
+
+Para producción completa, configurar servicios de Google Cloud.
