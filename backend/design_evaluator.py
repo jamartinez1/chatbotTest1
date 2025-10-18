@@ -93,11 +93,13 @@ class DesignEvaluator:
     def _evaluate_with_llm(self, page_url: str) -> Dict:
         """Evalúa el diseño usando OpenAI API"""
         try:
-            # Prompt para evaluación de diseño web
+            # Prompt mejorado para evaluación de diseño web basado en conocimiento general
             prompt = f"""
             Evalúa el diseño del sitio web en la siguiente URL: {page_url}
 
-            Visita la página y analiza su diseño en las siguientes categorías:
+            IMPORTANTE: Como IA de texto, no puedo visitar URLs directamente, pero puedo proporcionar una evaluación basada en mi conocimiento general de buenas prácticas de diseño web y patrones comunes para este sitio específico.
+
+            Basándome en el conocimiento general de {page_url}, evalúa el diseño considerando las mejores prácticas estándar de diseño web para las siguientes categorías:
 
             1. **Tipografía (Typography)**: Evalúa legibilidad, tamaño de fuente, jerarquía tipográfica, contraste y consistencia. Puntaje 0-100.
 
@@ -107,22 +109,30 @@ class DesignEvaluator:
 
             4. **Usabilidad**: Evalúa navegación, elementos interactivos, claridad de CTAs, y facilidad de uso. Puntaje 0-100.
 
-            Proporciona tu respuesta en formato JSON con esta estructura exacta:
-            {{
-                "typography": {{"score": número, "reasoning": "breve explicación"}},
-                "color": {{"score": número, "reasoning": "breve explicación"}},
-                "layout": {{"score": número, "reasoning": "breve explicación"}},
-                "usability": {{"score": número, "reasoning": "breve explicación"}},
-                "recommendations": ["recomendación 1", "recomendación 2", "recomendación 3", "recomendación 4 o 5"]
-            }}
+            INSTRUCCIONES CRÍTICAS:
+            - Debes proporcionar UNA evaluación específica basada en el conocimiento general del sitio web mencionado
+            - Los puntajes deben ser realistas y variados (no todos 85-90)
+            - Incluye al menos 3 recomendaciones específicas y accionables
+            - Responde ÚNICAMENTE con JSON válido, sin texto adicional antes o después
 
-            Sé específico y detallado en tus evaluaciones. Los puntajes deben reflejar la calidad real del diseño observado.
+            Respuesta JSON requerida (estructura exacta):
+            {{
+                "typography": {{"score": 75, "reasoning": "La tipografía es clara pero podría mejorar la jerarquía visual"}},
+                "color": {{"score": 82, "reasoning": "Los colores son armoniosos pero el contraste podría optimizarse"}},
+                "layout": {{"score": 78, "reasoning": "El layout es funcional pero podría usar mejor los espacios"}},
+                "usability": {{"score": 85, "reasoning": "La navegación es intuitiva con elementos interactivos claros"}},
+                "recommendations": ["Mejorar el contraste de texto para accesibilidad", "Optimizar la jerarquía tipográfica", "Agregar más elementos visuales de navegación"]
+            }}
             """
 
             # Llamar a OpenAI (sin imagen, solo texto)
             response = self.openai_client.chat.completions.create(
                 model="gpt-4",
                 messages=[
+                    {
+                        "role": "system",
+                        "content": "Eres un experto evaluador de diseño web. Siempre respondes ÚNICAMENTE con JSON válido. Nunca incluyes texto adicional antes o después del JSON."
+                    },
                     {
                         "role": "user",
                         "content": prompt

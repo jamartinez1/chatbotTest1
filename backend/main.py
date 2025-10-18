@@ -55,7 +55,7 @@ def upload_screenshot_to_drive(screenshot_data):
     """
     try:
         # URL del Apps Script (debe estar configurada en el .env)
-        apps_script_url = os.getenv('GOOGLE_APPS_SCRIPT_URL', 'https://script.google.com/macros/s/AKfycbyebO7-IH2aZdf7wThJWsYNf6BXyJVyb3TjajO_2gmw37ZFlwSLfCdkmHtS7HLfwyKN/exec')
+        apps_script_url = os.getenv('GOOGLE_APPS_SCRIPT_URL')
         logger.info(f"Usando Apps Script URL: {apps_script_url}")
 
         # Convertir bytes a base64
@@ -107,7 +107,7 @@ def register_evaluation_in_sheets(url, evaluation_data, screenshot_url):
     """
     try:
         # URL del Apps Script (debe estar configurada en el .env)
-        apps_script_url = os.getenv('GOOGLE_APPS_SCRIPT_URL', 'https://script.google.com/macros/s/AKfycbyebO7-IH2aZdf7wThJWsYNf6BXyJVyb3TjajO_2gmw37ZFlwSLfCdkmHtS7HLfwyKN/exec')
+        apps_script_url = os.getenv('GOOGLE_APPS_SCRIPT_URL')
         logger.info(f"Registrando evaluación en Sheets usando URL: {apps_script_url}")
 
         # Preparar payload para registro en Sheets
