@@ -67,18 +67,18 @@ class ScreenshotCapture:
             # Capturar screenshot
             screenshot = driver.get_screenshot_as_png()
 
-            # Guardar automáticamente en la carpeta screenshots para control
-            if not output_path:
-                # Crear nombre de archivo basado en la URL y timestamp
-                import hashlib
-                import datetime
-                url_hash = hashlib.md5(url.encode()).hexdigest()[:8]
-                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-                output_path = f"screenshots/screenshot_{url_hash}_{timestamp}.png"
+            # # Guardar automáticamente en la carpeta screenshots para control
+            # if not output_path:
+            #     # Crear nombre de archivo basado en la URL y timestamp
+            #     import hashlib
+            #     import datetime
+            #     url_hash = hashlib.md5(url.encode()).hexdigest()[:8]
+            #     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            #     output_path = f"screenshots/screenshot_{url_hash}_{timestamp}.png"
 
-            # Guardar localmente
-            with open(output_path, 'wb') as f:
-                f.write(screenshot)
+            # # Guardar localmente
+            # with open(output_path, 'wb') as f:
+            #     f.write(screenshot)
 
             return screenshot
 
@@ -123,18 +123,18 @@ class ScreenshotCapture:
             # Capturar screenshot completo
             screenshot = driver.get_screenshot_as_png()
 
-            # Guardar automáticamente en la carpeta screenshots para control
-            if not output_path:
-                # Crear nombre de archivo basado en la URL y timestamp
-                import hashlib
-                import datetime
-                url_hash = hashlib.md5(url.encode()).hexdigest()[:8]
-                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-                output_path = f"screenshots/fullpage_{url_hash}_{timestamp}.png"
+            # # Guardar automáticamente en la carpeta screenshots para control
+            # if not output_path:
+            #     # Crear nombre de archivo basado en la URL y timestamp
+            #     import hashlib
+            #     import datetime
+            #     url_hash = hashlib.md5(url.encode()).hexdigest()[:8]
+            #     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            #     output_path = f"screenshots/fullpage_{url_hash}_{timestamp}.png"
 
-            # Guardar localmente
-            with open(output_path, 'wb') as f:
-                f.write(screenshot)
+            # # Guardar localmente
+            # with open(output_path, 'wb') as f:
+            #     f.write(screenshot)
 
             return screenshot
 

@@ -1,0 +1,4 @@
+- [x] Comentar el bloque de guardado local en capture_screenshot (líneas 70-82)
+- [x] Comentar el bloque de guardado local en capture_full_page (líneas similares)
+- [x] Probar captura de screenshot (funciona correctamente)
+- [x] Subir cambios a Git
