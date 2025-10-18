@@ -86,15 +86,58 @@ def upload_screenshot_to_drive(screenshot_data):
         logger.error(f"Error subiendo screenshot a Drive: {e}")
         raise
 
+def register_evaluation_in_sheets(url, evaluation_data, screenshot_url):
+    """
+    Registra la evaluación en Google Sheets usando Apps Script
+
+    Args:
+        url: URL evaluada
+        evaluation_data: Datos de la evaluación
+        screenshot_url: URL del screenshot (opcional)
+    """
+    try:
+        # URL del Apps Script (debe estar configurada en el .env)
+        apps_script_url = os.getenv('APPS_SCRIPT_URL', 'https://script.google.com/macros/s/AKfycbwzdcTEzcs7aNV-JXFh-C4oqNrNA_GNfAmu_WCTwOZjfpmHlliAFP2b_ockFnkd6olY/exec')
+
+        # Preparar payload para registro en Sheets
+        payload = {
+            'timestamp': evaluation_data.get('timestamp', '2025-01-01T12:00:00Z'),
+            'url': url,
+            'total_score': evaluation_data['total_score'],
+            'grade': evaluation_data['grade'],
+            'typography_score': evaluation_data.get('categories', {}).get('typography', {}).get('score', 0),
+            'color_score': evaluation_data.get('categories', {}).get('color', {}).get('score', 0),
+            'layout_score': evaluation_data.get('categories', {}).get('layout', {}).get('score', 0),
+            'usability_score': evaluation_data.get('categories', {}).get('usability', {}).get('score', 0),
+            'screenshot_url': screenshot_url or '',
+            'recommendations': ', '.join(evaluation_data.get('recommendations', []))
+        }
+
+        # Enviar POST al Apps Script
+        response = requests.post(
+            apps_script_url,
+            json=payload,
+            headers={'Content-Type': 'application/json'},
+            timeout=10
+        )
+
+        response.raise_for_status()
+
+        result = response.json()
+        if not result.get('success'):
+            raise Exception(f"Apps Script error: {result.get('error', 'Unknown error')}")
+
+    except Exception as e:
+        logger.error(f"Error registrando en Sheets: {e}")
+        raise
+
 def initialize_services():
     """Inicializa los servicios externos"""
     global screenshot_capture, design_evaluator
 
     try:
-        # Nota: Screenshot capture no se inicializa en entorno de despliegue
-        # Solo se usa para desarrollo local
-        screenshot_capture = None
-        logger.info("Screenshot capture omitido en entorno de despliegue")
+        screenshot_capture = ScreenshotCapture()
+        logger.info("Screenshot capture inicializado")
 
         # Inicializar design_evaluator siempre (no depende de Google)
         design_evaluator = DesignEvaluator()
@@ -137,9 +180,9 @@ async def evaluate_website(request: EvaluationRequest):
         if not url.startswith(('http://', 'https://')):
             raise HTTPException(status_code=400, detail="URL debe comenzar con http:// o https://")
 
-        # Nota: Screenshot no se captura en entorno de despliegue (Render.com)
-        # La evaluación se realiza directamente con OpenAI usando la URL
-        logger.info(f"Evaluando diseño de {url} sin captura de screenshot")
+        # Capturar screenshot
+        logger.info(f"Capturando screenshot de {url}")
+        screenshot_data = screenshot_capture.capture_screenshot(url)
 
         # Subir screenshot a Google Drive usando Apps Script
         screenshot_url = None
@@ -168,6 +211,15 @@ async def evaluate_website(request: EvaluationRequest):
                 logger.error(f"Traceback completo: {traceback.format_exc()}")
         else:
             logger.warning("Design evaluator no está disponible - usando evaluación básica")
+
+        # Registrar evaluación en Google Sheets
+        try:
+            logger.info("Registrando evaluación en Google Sheets...")
+            register_evaluation_in_sheets(url, evaluation_data, screenshot_url)
+            logger.info("Evaluación registrada exitosamente en Sheets")
+        except Exception as e:
+            logger.error(f"Error registrando en Sheets: {e}")
+            # Continuar aunque falle el registro en Sheets
 
         # Generar respuesta
         response = EvaluationResponse(
