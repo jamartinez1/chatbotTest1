@@ -47,8 +47,10 @@ def initialize_services():
     global screenshot_capture, design_evaluator
 
     try:
-        screenshot_capture = ScreenshotCapture()
-        logger.info("Screenshot capture inicializado")
+        # Nota: Screenshot capture no se inicializa en entorno de despliegue
+        # Solo se usa para desarrollo local
+        screenshot_capture = None
+        logger.info("Screenshot capture omitido en entorno de despliegue")
 
         # Inicializar design_evaluator siempre (no depende de Google)
         design_evaluator = DesignEvaluator()
@@ -91,9 +93,9 @@ async def evaluate_website(request: EvaluationRequest):
         if not url.startswith(('http://', 'https://')):
             raise HTTPException(status_code=400, detail="URL debe comenzar con http:// o https://")
 
-        # Capturar screenshot
-        logger.info(f"Capturando screenshot de {url}")
-        screenshot_data = screenshot_capture.capture_screenshot(url)
+        # Nota: Screenshot no se captura en entorno de despliegue (Render.com)
+        # La evaluación se realiza directamente con OpenAI usando la URL
+        logger.info(f"Evaluando diseño de {url} sin captura de screenshot")
 
         # Evaluar diseño
         logger.info(f"Estado de servicios - design_evaluator: {design_evaluator is not None}")
