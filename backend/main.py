@@ -55,11 +55,13 @@ def upload_screenshot_to_drive(screenshot_data):
     """
     try:
         # URL del Apps Script (debe estar configurada en el .env)
-        apps_script_url = os.getenv('APPS_SCRIPT_URL', 'https://script.google.com/macros/s/AKfycbwzdcTEzcs7aNV-JXFh-C4oqNrNA_GNfAmu_WCTwOZjfpmHlliAFP2b_ockFnkd6olY/exec')
+        apps_script_url = os.getenv('GOOGLE_APPS_SCRIPT_URL', 'https://script.google.com/macros/s/AKfycbyebO7-IH2aZdf7wThJWsYNf6BXyJVyb3TjajO_2gmw37ZFlwSLfCdkmHtS7HLfwyKN/exec')
+        logger.info(f"Usando Apps Script URL: {apps_script_url}")
 
         # Convertir bytes a base64
         base64_data = base64.b64encode(screenshot_data).decode('utf-8')
         data_url = f"data:image/png;base64,{base64_data}"
+        logger.info(f"Imagen base64 preparada, tamaño: {len(base64_data)} caracteres")
 
         # Preparar payload para Apps Script
         payload = {
@@ -67,6 +69,7 @@ def upload_screenshot_to_drive(screenshot_data):
         }
 
         # Enviar POST al Apps Script
+        logger.info("Enviando solicitud POST al Apps Script...")
         response = requests.post(
             apps_script_url,
             json=payload,
@@ -74,16 +77,23 @@ def upload_screenshot_to_drive(screenshot_data):
             timeout=30
         )
 
+        logger.info(f"Respuesta del Apps Script - Status: {response.status_code}")
         response.raise_for_status()
 
         result = response.json()
+        logger.info(f"Respuesta JSON del Apps Script: {result}")
+
         if not result.get('success'):
             raise Exception(f"Apps Script error: {result.get('error', 'Unknown error')}")
 
-        return result.get('url')
+        screenshot_url = result.get('url')
+        logger.info(f"Screenshot subido exitosamente: {screenshot_url}")
+        return screenshot_url
 
     except Exception as e:
         logger.error(f"Error subiendo screenshot a Drive: {e}")
+        import traceback
+        logger.error(f"Traceback completo: {traceback.format_exc()}")
         raise
 
 def register_evaluation_in_sheets(url, evaluation_data, screenshot_url):
@@ -97,9 +107,14 @@ def register_evaluation_in_sheets(url, evaluation_data, screenshot_url):
     """
     try:
         # URL del Apps Script (debe estar configurada en el .env)
-        apps_script_url = os.getenv('APPS_SCRIPT_URL', 'https://script.google.com/macros/s/AKfycbwzdcTEzcs7aNV-JXFh-C4oqNrNA_GNfAmu_WCTwOZjfpmHlliAFP2b_ockFnkd6olY/exec')
+        apps_script_url = os.getenv('GOOGLE_APPS_SCRIPT_URL', 'https://script.google.com/macros/s/AKfycbyebO7-IH2aZdf7wThJWsYNf6BXyJVyb3TjajO_2gmw37ZFlwSLfCdkmHtS7HLfwyKN/exec')
+        logger.info(f"Registrando evaluación en Sheets usando URL: {apps_script_url}")
 
         # Preparar payload para registro en Sheets
+        recommendations = evaluation_data.get('recommendations', [])
+        if not isinstance(recommendations, list):
+            recommendations = [str(recommendations)]
+
         payload = {
             'timestamp': evaluation_data.get('timestamp', '2025-01-01T12:00:00Z'),
             'url': url,
@@ -110,8 +125,10 @@ def register_evaluation_in_sheets(url, evaluation_data, screenshot_url):
             'layout_score': evaluation_data.get('categories', {}).get('layout', {}).get('score', 0),
             'usability_score': evaluation_data.get('categories', {}).get('usability', {}).get('score', 0),
             'screenshot_url': screenshot_url or '',
-            'recommendations': ', '.join(evaluation_data.get('recommendations', []))
+            'recommendations': recommendations
         }
+
+        logger.info(f"Payload para Sheets: {payload}")
 
         # Enviar POST al Apps Script
         response = requests.post(
@@ -121,14 +138,19 @@ def register_evaluation_in_sheets(url, evaluation_data, screenshot_url):
             timeout=10
         )
 
+        logger.info(f"Respuesta Sheets - Status: {response.status_code}")
         response.raise_for_status()
 
         result = response.json()
+        logger.info(f"Respuesta JSON Sheets: {result}")
+
         if not result.get('success'):
             raise Exception(f"Apps Script error: {result.get('error', 'Unknown error')}")
 
     except Exception as e:
         logger.error(f"Error registrando en Sheets: {e}")
+        import traceback
+        logger.error(f"Traceback completo: {traceback.format_exc()}")
         raise
 
 def initialize_services():

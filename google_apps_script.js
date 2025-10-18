@@ -69,9 +69,9 @@ function doPost(e) {
         file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
         Logger.log('File sharing set successfully');
 
-        // Construir URL de descarga directa usando el file ID
+        // Construir URL de visualización directa usando el file ID (para mostrar en web)
         var fileId = file.getId();
-        var downloadUrl = 'https://drive.google.com/uc?export=download&id=' + fileId;
+        var downloadUrl = 'https://drive.google.com/uc?export=view&id=' + fileId;
         Logger.log('Screenshot uploaded successfully: ' + downloadUrl);
 
       } catch (uploadError) {
