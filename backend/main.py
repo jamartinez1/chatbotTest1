@@ -272,6 +272,16 @@ async def health_check():
         "services": services_status
     }
 
+@app.get("/favicon.ico")
+async def favicon():
+    """Servir el favicon"""
+    return FileResponse("favicon.ico", media_type="image/x-icon")
+
+@app.get("/manifest.json")
+async def manifest():
+    """Servir el manifest.json"""
+    return FileResponse("manifest.json", media_type="application/json")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
