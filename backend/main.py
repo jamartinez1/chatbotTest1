@@ -37,10 +37,54 @@ class EvaluationResponse(BaseModel):
     grade: str
     categories: dict
     recommendations: list
+    screenshot_url: Optional[str] = None
 
 # Instancias de servicios (se inicializarán cuando sea necesario)
 screenshot_capture = None
 design_evaluator = None
+
+def upload_screenshot_to_drive(screenshot_data):
+    """
+    Sube un screenshot a Google Drive usando Apps Script
+
+    Args:
+        screenshot_data: Bytes del screenshot
+
+    Returns:
+        str: URL del archivo subido en Google Drive
+    """
+    try:
+        # URL del Apps Script (debe estar configurada en el .env)
+        apps_script_url = os.getenv('APPS_SCRIPT_URL', 'https://script.google.com/macros/s/AKfycbwzdcTEzcs7aNV-JXFh-C4oqNrNA_GNfAmu_WCTwOZjfpmHlliAFP2b_ockFnkd6olY/exec')
+
+        # Convertir bytes a base64
+        base64_data = base64.b64encode(screenshot_data).decode('utf-8')
+        data_url = f"data:image/png;base64,{base64_data}"
+
+        # Preparar payload para Apps Script
+        payload = {
+            'image_base64': data_url
+        }
+
+        # Enviar POST al Apps Script
+        response = requests.post(
+            apps_script_url,
+            json=payload,
+            headers={'Content-Type': 'application/json'},
+            timeout=30
+        )
+
+        response.raise_for_status()
+
+        result = response.json()
+        if not result.get('success'):
+            raise Exception(f"Apps Script error: {result.get('error', 'Unknown error')}")
+
+        return result.get('url')
+
+    except Exception as e:
+        logger.error(f"Error subiendo screenshot a Drive: {e}")
+        raise
 
 def initialize_services():
     """Inicializa los servicios externos"""
@@ -95,6 +139,16 @@ async def evaluate_website(request: EvaluationRequest):
         logger.info(f"Capturando screenshot de {url}")
         screenshot_data = screenshot_capture.capture_screenshot(url)
 
+        # Subir screenshot a Google Drive usando Apps Script
+        screenshot_url = None
+        try:
+            logger.info("Subiendo screenshot a Google Drive...")
+            screenshot_url = upload_screenshot_to_drive(screenshot_data)
+            logger.info(f"Screenshot subido exitosamente: {screenshot_url}")
+        except Exception as e:
+            logger.error(f"Error subiendo screenshot a Drive: {e}")
+            # Continuar sin screenshot_url si falla la subida
+
         # Evaluar diseño
         logger.info(f"Estado de servicios - design_evaluator: {design_evaluator is not None}")
         evaluation_data = {"total_score": 50.0, "grade": "Regular", "categories": {}, "recommendations": ["Evaluación básica completada"]}
@@ -120,7 +174,7 @@ async def evaluate_website(request: EvaluationRequest):
             grade=evaluation_data['grade'],
             categories=evaluation_data['categories'],
             recommendations=evaluation_data.get('recommendations', []),
-            screenshot_url=None  # No se sube a la nube, solo se evalúa
+            screenshot_url=screenshot_url
         )
 
         return response
